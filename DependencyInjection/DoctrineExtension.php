@@ -81,6 +81,8 @@ class DoctrineExtension extends AbstractDoctrineExtension
             $this->dbalLoad($config['dbal'], $container);
 
             $this->loadMessengerServices($container);
+
+            $this->loadMiddlewares($container);
         }
 
         if (empty($config['orm'])) {
@@ -139,9 +141,18 @@ class DoctrineExtension extends AbstractDoctrineExtension
         $container->setParameter('doctrine.connections', $connections);
         $container->setParameter('doctrine.default_connection', $this->defaultConnection);
 
+        /** @psalm-suppress UndefinedClass */
+        if (interface_exists(Middleware::class)) {
+            $container
+                ->getDefinition('doctrine.dbal.logger')
+                ->replaceArgument(0, null);
+        }
+
         foreach ($config['connections'] as $name => $connection) {
             $this->loadDbalConnection($name, $connection, $container);
         }
+
+        $container->registerForAutoconfiguration(Middleware::class)->addTag('doctrine.middleware');
     }
 
     /**
@@ -1065,5 +1076,16 @@ class DoctrineExtension extends AbstractDoctrineExtension
         $container->setDefinition($id, $poolDefinition);
 
         return $id;
+    }
+
+    private function loadMiddlewares(ContainerBuilder $container): void
+    {
+        /** @psalm-suppress UndefinedClass */
+        if (! interface_exists(Middleware::class)) {
+            return;
+        }
+
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader->load('middlewares.xml');
     }
 }

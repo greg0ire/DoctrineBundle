@@ -1102,8 +1102,6 @@ class DoctrineExtensionTest extends TestCase
         $this->assertEquals($managerClass, $bazManagerDef->getClass());
     }
 
-    // Disabled to prevent changing the comment below to a single-line annotation
-    // phpcs:disable SlevomatCodingStandard.Commenting.RequireOneLineDocComment.MultiLineDocComment
 
     /**
      * @requires PHP 8
@@ -1142,7 +1140,50 @@ class DoctrineExtensionTest extends TestCase
         $this->assertSame([$expected], $definition->getTag('doctrine.orm.entity_listener'));
     }
 
-    // phpcs:enable
+    /**
+     * @return array<string, bool[]>
+     */
+    public function provideLoggingMiddleware(): array
+    {
+        return [
+            'with middlewares' => [true, false, true],
+            'without middlewares' => [false, true, false],
+        ];
+    }
+
+    /**
+     * @dataProvider provideLoggingMiddleware
+     */
+    public function testLoggingMiddleware(bool $withMiddleware, bool $loggerInjected, bool $middlewareRegistered): void
+    {
+        /** @psalm-suppress UndefinedClass */
+        if ($withMiddleware !== interface_exists(Middleware::class)) {
+            $this->markTestSkipped(sprintf('%s needs %s to not exist', __METHOD__, Middleware::class));
+        }
+
+        $container = $this->getContainer();
+        $extension = new DoctrineExtension();
+
+        $config = BundleConfigurationBuilder::createBuilderWithBaseValues()
+            ->addConnection([
+                'connections' => [
+                    'default' => [
+                        'password' => 'foo',
+                        'logging' => true,
+                    ],
+                ],
+            ])
+            ->addBaseEntityManager()
+            ->build();
+
+        $extension->load([$config], $container);
+
+        $loggerDef = $container->getDefinition('doctrine.dbal.logger');
+        $this->assertSame($loggerInjected, $loggerDef->getArgument(0) !== null);
+
+        $this->assertSame($middlewareRegistered, $container->hasDefinition('doctrine.dbal.logging_middleware'));
+    }
+
 
     /** @param list<string> $bundles */
     private function getContainer(array $bundles = ['YamlBundle'], string $vendor = ''): ContainerBuilder
