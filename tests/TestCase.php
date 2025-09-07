@@ -62,6 +62,7 @@ class TestCase extends BaseTestCase
                     ],
                 ],
                 'orm' => [
+                    'controller_resolver' => ['auto_mapping' => false],
                     'default_entity_manager' => 'default',
                     'entity_managers' => [
                         'default' => [

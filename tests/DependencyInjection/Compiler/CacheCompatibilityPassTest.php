@@ -54,6 +54,7 @@ class CacheCompatibilityPassTest extends TestCase
                         'doctrine',
                         [
                             'orm' => [
+                                'controller_resolver' => ['auto_mapping' => false],
                                 'query_cache_driver' => ['type' => 'service', 'id' => 'custom_cache_service'],
                                 'result_cache_driver' => ['type' => 'pool', 'pool' => 'doctrine.system_cache_pool'],
                                 'second_level_cache' => [
@@ -89,7 +90,12 @@ class CacheCompatibilityPassTest extends TestCase
                 $loader->load(static function (ContainerBuilder $containerBuilder): void {
                     $containerBuilder->loadFromExtension(
                         'doctrine',
-                        ['orm' => ['metadata_cache_driver' => ['type' => 'service', 'id' => 'custom_cache_service']]],
+                        [
+                            'orm' => [
+                                'controller_resolver' => ['auto_mapping' => false],
+                                'metadata_cache_driver' => ['type' => 'service', 'id' => 'custom_cache_service'],
+                            ],
+                        ],
                     );
                     $containerBuilder->setDefinition(
                         'custom_cache_service',

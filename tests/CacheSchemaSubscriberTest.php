@@ -64,7 +64,9 @@ class CacheSchemaSubscriberTest extends TestCase
         $extension->load([
             [
                 'dbal' => [],
-                'orm' => [],
+                'orm' => [
+                    'controller_resolver' => ['auto_mapping' => false],
+                ],
             ],
         ], $container);
 
