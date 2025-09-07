@@ -4,6 +4,7 @@ namespace Doctrine\Bundle\DoctrineBundle\Tests;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\CacheSchemaSubscriberPass;
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\DoctrineExtension;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\DependencyInjection\Alias;
@@ -13,7 +14,10 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\DependencyInjection\Reference;
 
 use function interface_exists;
+use function method_exists;
 use function sys_get_temp_dir;
+
+use const PHP_VERSION_ID;
 
 class CacheSchemaSubscriberTest extends TestCase
 {
@@ -66,7 +70,10 @@ class CacheSchemaSubscriberTest extends TestCase
                 'dbal' => [],
                 'orm' => [
                     'controller_resolver' => ['auto_mapping' => false],
-                ],
+                    /* @phpstan-ignore function.alreadyNarrowedType */
+                ] + (method_exists(Configuration::class, 'enableNativeLazyObjects') ? [
+                    'enable_native_lazy_objects' => PHP_VERSION_ID >= 80400,
+                ] : []),
             ],
         ], $container);
 
